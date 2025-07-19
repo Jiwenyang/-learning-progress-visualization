@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Learning Progress Visualization System{% endblock %}
+
+{% block styles %}
+<style>
+    .jumbotron {
+        padding: 3rem;
+        margin-bottom: 2rem;
+        background-color: #e9ecef;
+        border-radius: 0.3rem;
+    }
+    .feature-box {
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        height: 100%;
+        transition: transform 0.3s;
+    }
+    .feature-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #0d6efd;
+    }
+    .stats-box {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 2rem;
+        margin-top: 2rem;
+        text-align: center;
+    }
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    .btn-get-started {
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Area -->
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to Learning Progress Visualization System</h1>
+    <p class="lead">Record your learning progress, visualize your learning outcomes, and improve your learning efficiency.</p>
+    <hr class="my-4">
+    <p>Start recording your learning progress, view your learning statistics, and make your learning more organized.</p>
+    <a class="btn btn-primary btn-get-started" href="{{ url_for('progress_list') }}" role="button">Get Started</a>
+</div>
+
+<!-- Feature Introduction -->
+<h2 class="mb-4">System Features</h2>
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="feature-box bg-white">
+            <div class="feature-icon">
+                <i class="fas fa-list"></i>
+            </div>
+            <h3>Progress List</h3>
+            <p>Add what you want to learn, record learning progress, and easily manage all learning tasks.</p>
+            <a href="{{ url_for('progress_list') }}" class="btn btn-outline-primary">View Progress List</a>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="feature-box bg-white">
+            <div class="feature-icon">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <h3>Progress Visualization</h3>
+            <p>Visualize your learning progress through charts to help you better understand your learning situation.</p>
+            <a href="{{ url_for('visualization') }}" class="btn btn-outline-primary">View Visualization</a>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="feature-box bg-white">
+            <div class="feature-icon">
+                <i class="fas fa-user-cog"></i>
+            </div>
+            <h3>Profile Center</h3>
+            <p>Manage your personal information, change password, and ensure account security.</p>
+            <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">Go to Profile</a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="stats-box">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="stats-number">{{ progress_count|default(0) }}</div>
+            <p>Learning Projects</p>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-number">{{ completed_count|default(0) }}</div>
+            <p>Completed Projects</p>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-number">{{ completion_rate|default('0%') }}</div>
+            <p>Completion Rate</p>
+        </div>
+    </div>
+</div>
+{% endblock %} 

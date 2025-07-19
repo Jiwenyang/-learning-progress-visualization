@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Learning Progress Visualization System{% endblock %}
+
+{% block styles %}
+<style>
+    .profile-header {
+        margin-bottom: 2rem;
+    }
+    .profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .profile-card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        margin-bottom: 2rem;
+    }
+    .profile-card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        padding: 1rem 1.5rem;
+    }
+    .profile-card-title {
+        margin-bottom: 0;
+        font-weight: 600;
+    }
+    .profile-info {
+        padding: 1.5rem;
+    }
+    .profile-info-item {
+        margin-bottom: 1rem;
+    }
+    .profile-info-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+    .profile-info-value {
+        font-size: 1.1rem;
+    }
+    .change-password-form {
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>User Profile</h1>
+        <p class="text-muted">Manage your account information</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card profile-card">
+                <div class="profile-card-header">
+                    <h5 class="profile-card-title">Account Information</h5>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Username</div>
+                        <div class="profile-info-value">{{ user.username }}</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Email</div>
+                        <div class="profile-info-value">{{ user.email }}</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Registration Date</div>
+                        <div class="profile-info-value">{{ user.created_at.strftime('%Y-%m-%d') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card profile-card">
+                <div class="profile-card-header">
+                    <h5 class="profile-card-title">Change Password</h5>
+                </div>
+                <form class="change-password-form" method="post" action="{{ url_for('profile') }}">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

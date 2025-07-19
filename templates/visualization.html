@@ -1,0 +1,372 @@
+{% extends 'base.html' %}
+
+{% block title %}Visualization - Learning Progress Visualization System{% endblock %}
+
+{% block styles %}
+<style>
+    .visualization-header {
+        margin-bottom: 2rem;
+    }
+    .chart-container {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        height: 100%;
+    }
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #343a40;
+    }
+    .chart {
+        height: 400px;
+        width: 100%;
+    }
+    .stats-card {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .stats-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    .stats-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    .stats-text {
+        color: #6c757d;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+    .empty-icon {
+        font-size: 4rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+    /* Add left-right layout styles */
+    @media (max-width: 767px) {
+        .chart {
+            height: 300px; /* Reduce height on small screens */
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="visualization-header">
+    <h1>Learning Progress Visualization</h1>
+    <p class="text-muted">Visual representation of your learning progress and statistics</p>
+</div>
+
+{% if progress_data %}
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-icon text-primary">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stats-number">{{ progress_data|length }}</div>
+                <div class="stats-text">Total Learning Projects</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-icon text-success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                {% set completed = progress_data|selectattr('percentage', 'eq', 100)|list|length %}
+                <div class="stats-number">{{ completed }}</div>
+                <div class="stats-text">Completed Projects</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-icon text-info">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                {% set avg_percentage = (progress_data|sum(attribute='percentage') / progress_data|length)|round|int if progress_data|length > 0 else 0 %}
+                <div class="stats-number">{{ avg_percentage }}%</div>
+                <div class="stats-text">Average Completion Rate</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-icon text-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                {% set total_time = progress_data|sum(attribute='time_spent') %}
+                <div class="stats-number">{{ total_time|round(1) }}</div>
+                <div class="stats-text">Total Time Spent (hours)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Containers - First Row -->
+    <div class="row mb-4">
+        <!-- Progress Distribution Pie Chart -->
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h2 class="chart-title">Learning Progress Distribution</h2>
+                <div id="progressPieChart" class="chart"></div>
+            </div>
+        </div>
+        
+        <!-- Time Allocation Pie Chart -->
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h2 class="chart-title">Time Spent Distribution</h2>
+                <div id="timeSpentPieChart" class="chart"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart Containers - Second Row -->
+    <div class="row">
+        <!-- Bar Chart -->
+        <div class="col-12">
+            <div class="chart-container">
+                <h2 class="chart-title">Project Completion Status</h2>
+                <div id="barChart" class="chart"></div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-chart-pie"></i>
+        </div>
+        <h3>No Visualization Data Available</h3>
+        <p class="text-muted">After adding learning progress, your learning statistics charts will be displayed here.</p>
+        <a href="{{ url_for('add_progress') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Learning Progress
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if progress_data %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wait for DOM to fully load and render before initializing charts
+        setTimeout(function() {
+            // Progress Distribution Pie Chart
+            var progressPieChart = echarts.init(document.getElementById('progressPieChart'));
+            var progressPieOption = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'horizontal',
+                    bottom: 10,
+                    data: ['Completed', 'In Progress', 'Not Started']
+                },
+                series: [
+                    {
+                        name: 'Learning Progress',
+                        type: 'pie',
+                        radius: ['40%', '60%'],  // Adjust pie size
+                        center: ['50%', '50%'],  // Center display
+                        avoidLabelOverlap: false,
+                        itemStyle: {
+                            borderRadius: 10,
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: '18',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data: [
+                            {% set completed = progress_data|selectattr('percentage', 'eq', 100)|list|length %}
+                            {% set in_progress = progress_data|selectattr('percentage', 'gt', 0)|selectattr('percentage', 'lt', 100)|list|length %}
+                            {% set not_started = progress_data|selectattr('percentage', 'eq', 0)|list|length %}
+                            {value: {{ completed }}, name: 'Completed', itemStyle: {color: '#52c41a'}},
+                            {value: {{ in_progress }}, name: 'In Progress', itemStyle: {color: '#1890ff'}},
+                            {value: {{ not_started }}, name: 'Not Started', itemStyle: {color: '#d9d9d9'}}
+                        ]
+                    }
+                ]
+            };
+            progressPieChart.setOption(progressPieOption);
+            
+            // Time Allocation Pie Chart
+            var timeSpentPieChart = echarts.init(document.getElementById('timeSpentPieChart'));
+            var timeSpentPieOption = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} hours ({d}%)'
+                },
+                legend: {
+                    type: 'scroll',
+                    orient: 'horizontal',
+                    bottom: 10,
+                    data: [
+                        {% for item in progress_data %}
+                            '{{ item.title }}',
+                        {% endfor %}
+                    ]
+                },
+                series: [
+                    {
+                        name: 'Time Spent',
+                        type: 'pie',
+                        radius: ['40%', '60%'],
+                        center: ['50%', '50%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: {
+                            borderRadius: 10,
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: '18',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data: [
+                            {% for item in progress_data %}
+                                {% if item.time_spent > 0 %}
+                                {
+                                    value: {{ item.time_spent }},
+                                    name: '{{ item.title }}',
+                                    itemStyle: {
+                                        color: '#' + Math.floor(Math.random() * 16777215).toString(16)
+                                    }
+                                },
+                                {% endif %}
+                            {% endfor %}
+                        ]
+                    }
+                ]
+            };
+            timeSpentPieChart.setOption(timeSpentPieOption);
+
+            // Bar Chart
+            var barChart = echarts.init(document.getElementById('barChart'));
+            var barOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var param = params[0];
+                        return param.name + '<br/>' + 
+                               'Completion: ' + param.value + '%<br/>' +
+                               'Current Unit: ' + param.data.current + '<br/>' +
+                               'Total Units: ' + param.data.total + '<br/>' +
+                               'Time Spent: ' + param.data.time + ' hours';
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',  // Increase bottom space for rotated labels
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: [
+                        {% for item in progress_data %}
+                            '{{ item.title }}',
+                        {% endfor %}
+                    ],
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 45,  // Increase rotation angle
+                        textStyle: {
+                            fontSize: 10  // Reduce font size
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    max: 100,
+                    name: 'Completion Percentage(%)'
+                },
+                series: [
+                    {
+                        name: 'Completion',
+                        type: 'bar',
+                        barWidth: '50%',  // Adjust bar width
+                        data: [
+                            {% for item in progress_data %}
+                                {
+                                    value: {{ item.percentage }},
+                                    current: {{ item.current_unit }},
+                                    total: {{ item.total_units }},
+                                    time: {{ item.time_spent }},
+                                    itemStyle: {
+                                        color: (function() {
+                                            if ({{ item.percentage }} === 100) {
+                                                return '#52c41a';
+                                            } else if ({{ item.percentage }} > 0) {
+                                                return '#1890ff';
+                                            } else {
+                                                return '#d9d9d9';
+                                            }
+                                        })()
+                                    }
+                                },
+                            {% endfor %}
+                        ],
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}%'
+                        }
+                    }
+                ]
+            };
+            barChart.setOption(barOption);
+
+            // Resize charts when window size changes
+            window.addEventListener('resize', function() {
+                progressPieChart.resize();
+                timeSpentPieChart.resize();
+                barChart.resize();
+            });
+        }, 100);  // Delay 100ms to ensure DOM is fully rendered
+    });
+</script>
+{% endif %}
+{% endblock %} 
